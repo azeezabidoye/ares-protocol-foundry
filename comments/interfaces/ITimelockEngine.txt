@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/// @title ITimelockEngine
+/// @notice Interface for the hash-based time-delayed execution queue
+interface ITimelockEngine {
+    // ─────────────────────────────────────────────────────────────────────────
+    // Structs
+    // ─────────────────────────────────────────────────────────────────────────
+
+    struct QueuedExecution {
+        bytes32 execHash;           // Hash of all execution parameters
+        uint256 executableAfter;    // Earliest execution timestamp
+        bool    executed;
+        bool    cancelled;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Events
+    // ─────────────────────────────────────────────────────────────────────────
+
+    event ExecutionQueued(bytes32 indexed execHash, uint256 executableAfter);
+    event ExecutionCompleted(bytes32 indexed execHash);
+    event ExecutionCancelled(bytes32 indexed execHash);
+    event DelayUpdated(uint256 oldDelay, uint256 newDelay);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Functions
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function queue(bytes32 proposalHash) external returns (bytes32 execHash);
+
+    function cancel(bytes32 execHash) external;
+
+    function isQueued(bytes32 execHash) external view returns (bool);
+
+    function isExecutable(bytes32 execHash) external view returns (bool);
+
+    function getExecution(bytes32 execHash) external view returns (QueuedExecution memory);
+
+    function getDelay() external view returns (uint256);
+}
