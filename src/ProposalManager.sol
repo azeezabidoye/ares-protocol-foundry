@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
-import {IProposalManager} from "../interfaces/IProposalManager.sol";
+import {IProposalManager} from "../src/interfaces/IProposalManager.sol";
 
 /// @title ProposalManager
 /// @notice Manages the full lifecycle of ARES treasury proposals.
@@ -51,7 +51,7 @@ contract ProposalManager is IProposalManager, AccessControl {
     // ─────────────────────────────────────────────────────────────────────────
 
     constructor(address admin, address guardian) {
-        require(admin    != address(0), "ProposalManager: zero admin");
+        require(admin != address(0), "ProposalManager: zero admin");
         require(guardian != address(0), "ProposalManager: zero guardian");
 
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
@@ -77,14 +77,14 @@ contract ProposalManager is IProposalManager, AccessControl {
 
         _proposals[proposalHash] = Proposal({
             proposalHash: proposalHash,
-            proposer:     msg.sender,
-            actionType:   ActionType.TRANSFER, // placeholder until reveal
-            target:       address(0),
-            callData:     "",
-            value:        0,
-            commitBlock:  block.number,
-            revealBlock:  0,
-            state:        ProposalState.COMMITTED
+            proposer: msg.sender,
+            actionType: ActionType.TRANSFER, // placeholder until reveal
+            target: address(0),
+            callData: "",
+            value: 0,
+            commitBlock: block.number,
+            revealBlock: 0,
+            state: ProposalState.COMMITTED
         });
 
         _activeProposals[msg.sender]++;
@@ -96,18 +96,21 @@ contract ProposalManager is IProposalManager, AccessControl {
     ///         Verifies the hash matches the committed one.
     /// @return proposalHash The verified proposal hash
     function revealProposal(
-        ActionType  actionType,
-        address     target,
+        ActionType actionType,
+        address target,
         bytes calldata callData,
-        uint256     value,
-        bytes32     salt
+        uint256 value,
+        bytes32 salt
     ) external override returns (bytes32 proposalHash) {
         proposalHash = keccak256(
             abi.encode(actionType, target, callData, value, salt)
         );
 
         Proposal storage p = _proposals[proposalHash];
-        require(p.state == ProposalState.COMMITTED, "ProposalManager: not committed");
+        require(
+            p.state == ProposalState.COMMITTED,
+            "ProposalManager: not committed"
+        );
         require(p.proposer == msg.sender, "ProposalManager: not proposer");
         require(
             block.number >= p.commitBlock + MIN_COMMIT_BLOCKS,
@@ -116,12 +119,12 @@ contract ProposalManager is IProposalManager, AccessControl {
         require(target != address(0), "ProposalManager: zero target");
 
         // Write revealed parameters
-        p.actionType  = actionType;
-        p.target      = target;
-        p.callData    = callData;
-        p.value       = value;
+        p.actionType = actionType;
+        p.target = target;
+        p.callData = callData;
+        p.value = value;
         p.revealBlock = block.number;
-        p.state       = ProposalState.QUEUED;
+        p.state = ProposalState.QUEUED;
 
         emit ProposalRevealed(proposalHash, actionType);
     }
@@ -135,14 +138,19 @@ contract ProposalManager is IProposalManager, AccessControl {
     function cancelProposal(bytes32 proposalHash) external override {
         Proposal storage p = _proposals[proposalHash];
         require(
-            p.state == ProposalState.COMMITTED || p.state == ProposalState.QUEUED,
+            p.state == ProposalState.COMMITTED ||
+                p.state == ProposalState.QUEUED,
             "ProposalManager: not cancellable"
         );
 
-        bool isGuardian  = hasRole(GUARDIAN_ROLE, msg.sender);
-        bool isProposer  = (p.proposer == msg.sender && p.state == ProposalState.COMMITTED);
+        bool isGuardian = hasRole(GUARDIAN_ROLE, msg.sender);
+        bool isProposer = (p.proposer == msg.sender &&
+            p.state == ProposalState.COMMITTED);
 
-        require(isGuardian || isProposer, "ProposalManager: not authorized to cancel");
+        require(
+            isGuardian || isProposer,
+            "ProposalManager: not authorized to cancel"
+        );
 
         p.state = ProposalState.CANCELLED;
         _activeProposals[p.proposer]--;
@@ -155,7 +163,9 @@ contract ProposalManager is IProposalManager, AccessControl {
     // ─────────────────────────────────────────────────────────────────────────
 
     /// @notice Called by AresTreasury after a proposal is successfully executed.
-    function markExecuted(bytes32 proposalHash) external onlyRole(TREASURY_ROLE) {
+    function markExecuted(
+        bytes32 proposalHash
+    ) external onlyRole(TREASURY_ROLE) {
         Proposal storage p = _proposals[proposalHash];
         require(p.state == ProposalState.QUEUED, "ProposalManager: not queued");
 
@@ -169,21 +179,15 @@ contract ProposalManager is IProposalManager, AccessControl {
     // View
     // ─────────────────────────────────────────────────────────────────────────
 
-    function getProposal(bytes32 proposalHash)
-        external
-        view
-        override
-        returns (Proposal memory)
-    {
+    function getProposal(
+        bytes32 proposalHash
+    ) external view override returns (Proposal memory) {
         return _proposals[proposalHash];
     }
 
-    function getProposalState(bytes32 proposalHash)
-        external
-        view
-        override
-        returns (ProposalState)
-    {
+    function getProposalState(
+        bytes32 proposalHash
+    ) external view override returns (ProposalState) {
         return _proposals[proposalHash].state;
     }
 }

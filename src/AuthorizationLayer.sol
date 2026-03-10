@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {ECDSA} from "openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
-import {IAuthorizationLayer} from "../interfaces/IAuthorizationLayer.sol";
-import {SignatureLib} from "../libraries/SignatureLib.sol";
+import {IAuthorizationLayer} from "../src/interfaces/IAuthorizationLayer.sol";
+import {SignatureLib} from "../src/libraries/SignatureLib.sol";
 
 contract AuthorizationLayer is IAuthorizationLayer, AccessControl {
     using ECDSA for bytes32;

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {AccessControl}   from "openzeppelin-contracts/contracts/access/AccessControl.sol";
+import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
-import {MerkleProof}     from "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
-import {SafeERC20}       from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20}          from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {IRewardDistributor} from "../interfaces/IRewardDistributor.sol";
+import {MerkleProof} from "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
+import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {IRewardDistributor} from "../src/interfaces/IRewardDistributor.sol";
 
 /// @title RewardDistributor
 /// @notice Scalable Merkle-proof reward distribution for ARES contributors.
@@ -23,8 +23,12 @@ import {IRewardDistributor} from "../interfaces/IRewardDistributor.sol";
 ///           retroactively invalidate past claims
 ///         ✓ Root updates require ADMIN_ROLE (goes through governance + timelock)
 ///         ✓ ReentrancyGuard + CEI pattern around token transfer
-contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard {
-    using SafeERC20  for IERC20;
+contract RewardDistributor is
+    IRewardDistributor,
+    AccessControl,
+    ReentrancyGuard
+{
+    using SafeERC20 for IERC20;
     using MerkleProof for bytes32[];
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -69,20 +73,20 @@ contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard
     ///         Called by governance (via AresTreasury) after timelock delay.
     /// @param  merkleRoot   Root of the (address, amount) Merkle tree
     /// @param  totalAmount  Total tokens deposited for this period
-    function activatePeriod(bytes32 merkleRoot, uint256 totalAmount)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
-        require(merkleRoot   != bytes32(0), "RewardDist: zero root");
-        require(totalAmount  > 0,           "RewardDist: zero amount");
+    function activatePeriod(
+        bytes32 merkleRoot,
+        uint256 totalAmount
+    ) external onlyRole(ADMIN_ROLE) {
+        require(merkleRoot != bytes32(0), "RewardDist: zero root");
+        require(totalAmount > 0, "RewardDist: zero amount");
 
         uint256 periodId = ++_currentPeriod;
 
         _periods[periodId] = RewardPeriod({
-            merkleRoot:   merkleRoot,
-            totalAmount:  totalAmount,
-            activatedAt:  block.timestamp,
-            active:       true
+            merkleRoot: merkleRoot,
+            totalAmount: totalAmount,
+            activatedAt: block.timestamp,
+            active: true
         });
 
         // Caller must have pre-approved this contract to pull the tokens.
@@ -94,12 +98,12 @@ contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard
     /// @notice Update the root for an existing period (governance may correct errors).
     ///         Previous claims under the old root remain valid — no retroactive
     ///         invalidation because claims are keyed by (periodId, account).
-    function updateRoot(uint256 periodId, bytes32 newRoot)
-        external
-        onlyRole(ADMIN_ROLE)
-    {
+    function updateRoot(
+        uint256 periodId,
+        bytes32 newRoot
+    ) external onlyRole(ADMIN_ROLE) {
         require(_periods[periodId].active, "RewardDist: period not active");
-        require(newRoot != bytes32(0),     "RewardDist: zero root");
+        require(newRoot != bytes32(0), "RewardDist: zero root");
 
         bytes32 oldRoot = _periods[periodId].merkleRoot;
         _periods[periodId].merkleRoot = newRoot;
@@ -121,15 +125,15 @@ contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard
     /// @param amount    Token amount for this account in this period
     /// @param proof     Merkle inclusion proof
     function claim(
-        uint256            periodId,
-        address            account,
-        uint256            amount,
+        uint256 periodId,
+        address account,
+        uint256 amount,
         bytes32[] calldata proof
     ) external override nonReentrant {
-        require(account != address(0),             "RewardDist: zero account");
-        require(amount  > 0,                       "RewardDist: zero amount");
-        require(_periods[periodId].active,         "RewardDist: period not active");
-        require(!_claimed[periodId][account],      "RewardDist: already claimed");
+        require(account != address(0), "RewardDist: zero account");
+        require(amount > 0, "RewardDist: zero amount");
+        require(_periods[periodId].active, "RewardDist: period not active");
+        require(!_claimed[periodId][account], "RewardDist: already claimed");
 
         // Double-hash the leaf: keccak256(keccak256(abi.encodePacked(account, amount)))
         // This matches the standard used by off-chain Merkle tree builders that
@@ -156,21 +160,16 @@ contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard
     // View
     // ─────────────────────────────────────────────────────────────────────────
 
-    function hasClaimed(uint256 periodId, address account)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function hasClaimed(
+        uint256 periodId,
+        address account
+    ) external view override returns (bool) {
         return _claimed[periodId][account];
     }
 
-    function getPeriod(uint256 periodId)
-        external
-        view
-        override
-        returns (RewardPeriod memory)
-    {
+    function getPeriod(
+        uint256 periodId
+    ) external view override returns (RewardPeriod memory) {
         return _periods[periodId];
     }
 

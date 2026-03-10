@@ -6,10 +6,10 @@ import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/Reentrancy
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
-import {IProposalManager} from "../interfaces/IProposalManager.sol";
-import {IAuthorizationLayer} from "../interfaces/IAuthorizationLayer.sol";
-import {ITimelockEngine} from "../interfaces/ITimelockEngine.sol";
-import {SpendingLib} from "../libraries/SpendingLib.sol";
+import {IProposalManager} from "../src/interfaces/IProposalManager.sol";
+import {IAuthorizationLayer} from "../src/interfaces/IAuthorizationLayer.sol";
+import {ITimelockEngine} from "../src/interfaces/ITimelockEngine.sol";
+import {SpendingLib} from "../src/libraries/SpendingLib.sol";
 
 contract AresTreasury is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
