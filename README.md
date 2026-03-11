@@ -2,13 +2,9 @@
 
 A modular, attack-resistant smart contract treasury for decentralized protocol governance. Manages $500M+ in treasury assets with a multi-layered security architecture: commit-reveal proposals, EIP-712 multi-sig authorization, time-locked execution, and scalable Merkle reward distribution.
 
----
-
 ## Protocol Purpose
 
 ARES Protocol distributes capital to contributors, liquidity providers, and governance participants through a fully on-chain, trustless execution pipeline. Every treasury action must pass through four independent security checkpoints before funds move.
-
----
 
 ## Project Structure
 
@@ -124,14 +120,14 @@ forge script script/Deploy.s.sol \
 
 ### Environment Variables
 
-| Variable | Description | Example |
-|---|---|---|
-| `ADMIN_ADDRESS` | Governance multisig | `0xABC...` |
-| `GUARDIAN_ADDRESS` | Guardian multisig (cancel-only) | `0xDEF...` |
-| `EXECUTOR_ADDRESS` | Executor EOA or contract | `0x123...` |
-| `SIGNER_1` / `_2` / `_3` | Authorization signers | `0x456...` |
-| `REWARD_TOKEN` | ERC-20 token for rewards | `0x789...` |
-| `TIMELOCK_DELAY` | Delay in seconds | `86400` |
+| Variable                 | Description                     | Example    |
+| ------------------------ | ------------------------------- | ---------- |
+| `ADMIN_ADDRESS`          | Governance multisig             | `0xABC...` |
+| `GUARDIAN_ADDRESS`       | Guardian multisig (cancel-only) | `0xDEF...` |
+| `EXECUTOR_ADDRESS`       | Executor EOA or contract        | `0x123...` |
+| `SIGNER_1` / `_2` / `_3` | Authorization signers           | `0x456...` |
+| `REWARD_TOKEN`           | ERC-20 token for rewards        | `0x789...` |
+| `TIMELOCK_DELAY`         | Delay in seconds                | `86400`    |
 
 ---
 
@@ -145,15 +141,3 @@ forge script script/Deploy.s.sol \
 5. (wait delay period)
 6. treasury.execute(hash)                    → EXECUTED
 ```
-
----
-
-## Audit Status
-
-This system has not been audited. It is provided as a reference implementation demonstrating secure treasury design patterns. **Do not deploy to production without a professional security audit.**
-
----
-
-## License
-
-MIT
