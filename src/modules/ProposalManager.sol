@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
-import {IProposalManager} from "../src/interfaces/IProposalManager.sol";
+import {IProposalManager} from "../interfaces/IProposalManager.sol";
 
 contract ProposalManager is IProposalManager, AccessControl {
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");

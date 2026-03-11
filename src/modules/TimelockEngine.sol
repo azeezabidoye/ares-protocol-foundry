@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {AccessControl} from "openzeppelin-contracts/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
-import {ITimelockEngine} from "../src/interfaces/ITimelockEngine.sol";
+import {ITimelockEngine} from "../interfaces/ITimelockEngine.sol";
 
 contract TimelockEngine is ITimelockEngine, AccessControl, ReentrancyGuard {
     bytes32 public constant TREASURY_ROLE = keccak256("TREASURY_ROLE");

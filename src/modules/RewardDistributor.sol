@@ -6,7 +6,7 @@ import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/Reentrancy
 import {MerkleProof} from "openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {IRewardDistributor} from "../src/interfaces/IRewardDistributor.sol";
+import {IRewardDistributor} from "../interfaces/IRewardDistributor.sol";
 
 contract RewardDistributor is IRewardDistributor, AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;

@@ -3,11 +3,11 @@ pragma solidity ^0.8.20;
 
 import {Script, console2} from "forge-std/Script.sol";
 
-import {AresTreasury} from "../src/AresTreasury.sol";
-import {ProposalManager} from "../src/ProposalManager.sol";
-import {AuthorizationLayer} from "../src/AuthorizationLayer.sol";
-import {TimelockEngine} from "../src/TimelockEngine.sol";
-import {RewardDistributor} from "../src/RewardDistributor.sol";
+import {AresTreasury} from "../src/core/AresTreasury.sol";
+import {ProposalManager} from "../src/modules/ProposalManager.sol";
+import {AuthorizationLayer} from "../src/modules/AuthorizationLayer.sol";
+import {TimelockEngine} from "../src/modules/TimelockEngine.sol";
+import {RewardDistributor} from "../src/modules/RewardDistributor.sol";
 
 /// @title Deploy
 /// @notice Foundry deployment script for the ARES Protocol treasury system.
