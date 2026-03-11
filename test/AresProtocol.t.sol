@@ -95,14 +95,8 @@ contract AresProtocolTest is Test {
         timelock = new TimelockEngine(admin, guardian, DELAY);
 
         // Deploy core treasury
-        treasury = new AresTreasury(
-            admin,
-            guardian,
-            executor,
-            address(proposalMgr),
-            address(authLayer),
-            address(timelock)
-        );
+        treasury =
+            new AresTreasury(admin, guardian, executor, address(proposalMgr), address(authLayer), address(timelock));
 
         // Deploy reward distributor
         rewardDist = new RewardDistributor(admin, address(token));
@@ -132,11 +126,7 @@ contract AresProtocolTest is Test {
         (bytes32 proposalHash, bytes32 salt) = _buildProposalHash(
             IProposalManager.ActionType.TRANSFER,
             address(token),
-            abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                alice,
-                1 ether
-            ),
+            abi.encodeWithSignature("transfer(address,uint256)", alice, 1 ether),
             0
         );
 
@@ -156,11 +146,7 @@ contract AresProtocolTest is Test {
         proposalMgr.revealProposal(
             IProposalManager.ActionType.TRANSFER,
             address(token),
-            abi.encodeWithSignature(
-                "transfer(address,uint256)",
-                alice,
-                1 ether
-            ),
+            abi.encodeWithSignature("transfer(address,uint256)", alice, 1 ether),
             0,
             salt
         );
@@ -173,12 +159,7 @@ contract AresProtocolTest is Test {
     }
 
     function test_ProposalLifecycle_Cancel_ByProposer() public {
-        (bytes32 proposalHash, ) = _buildProposalHash(
-            IProposalManager.ActionType.TRANSFER,
-            alice,
-            "",
-            0
-        );
+        (bytes32 proposalHash,) = _buildProposalHash(IProposalManager.ActionType.TRANSFER, alice, "", 0);
 
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
@@ -186,19 +167,11 @@ contract AresProtocolTest is Test {
         vm.prank(proposer);
         proposalMgr.cancelProposal(proposalHash);
 
-        assertEq(
-            uint8(proposalMgr.getProposalState(proposalHash)),
-            uint8(IProposalManager.ProposalState.CANCELLED)
-        );
+        assertEq(uint8(proposalMgr.getProposalState(proposalHash)), uint8(IProposalManager.ProposalState.CANCELLED));
     }
 
     function test_ProposalLifecycle_Cancel_ByGuardian() public {
-        (bytes32 proposalHash, ) = _buildProposalHash(
-            IProposalManager.ActionType.TRANSFER,
-            alice,
-            "",
-            0
-        );
+        (bytes32 proposalHash,) = _buildProposalHash(IProposalManager.ActionType.TRANSFER, alice, "", 0);
 
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
@@ -206,10 +179,7 @@ contract AresProtocolTest is Test {
         vm.prank(guardian);
         proposalMgr.cancelProposal(proposalHash);
 
-        assertEq(
-            uint8(proposalMgr.getProposalState(proposalHash)),
-            uint8(IProposalManager.ProposalState.CANCELLED)
-        );
+        assertEq(uint8(proposalMgr.getProposalState(proposalHash)), uint8(IProposalManager.ProposalState.CANCELLED));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -220,25 +190,12 @@ contract AresProtocolTest is Test {
         bytes32 proposalHash = keccak256("test_proposal_auth");
         uint256 deadline = block.timestamp + 1 hours;
 
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
 
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
 
-        assertTrue(
-            authLayer.isAuthorized(proposalHash),
-            "should be authorized"
-        );
+        assertTrue(authLayer.isAuthorized(proposalHash), "should be authorized");
     }
 
     function test_Authorization_NoncesConsumed() public {
@@ -247,25 +204,11 @@ contract AresProtocolTest is Test {
 
         uint256 nonceBefore = authLayer.getNonce(signer1);
 
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
 
-        assertEq(
-            authLayer.getNonce(signer1),
-            nonceBefore + 1,
-            "nonce should increment"
-        );
+        assertEq(authLayer.getNonce(signer1), nonceBefore + 1, "nonce should increment");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -276,44 +219,36 @@ contract AresProtocolTest is Test {
         bytes32 execHash = keccak256("timelock_test");
 
         // Grant treasury role for this test
+        bytes32 currentRole = timelock.TREASURY_ROLE();
         vm.prank(admin);
-        timelock.grantRole(timelock.TREASURY_ROLE(), address(this));
+        timelock.grantRole(currentRole, address(this));
 
         timelock.queue(execHash);
 
-        assertFalse(
-            timelock.isExecutable(execHash),
-            "should not be executable yet"
-        );
+        assertFalse(timelock.isExecutable(execHash), "should not be executable yet");
 
         vm.warp(block.timestamp + DELAY + 1);
 
-        assertTrue(
-            timelock.isExecutable(execHash),
-            "should be executable after delay"
-        );
+        assertTrue(timelock.isExecutable(execHash), "should be executable after delay");
 
         timelock.markExecuted(execHash);
 
-        ITimelockEngine.QueuedExecution memory entry = timelock.getExecution(
-            execHash
-        );
+        ITimelockEngine.QueuedExecution memory entry = timelock.getExecution(execHash);
         assertTrue(entry.executed, "should be marked executed");
     }
 
     function test_Timelock_CancelByGuardian() public {
         bytes32 execHash = keccak256("cancel_test");
 
+        bytes32 currentRole = timelock.TREASURY_ROLE();
         vm.prank(admin);
-        timelock.grantRole(timelock.TREASURY_ROLE(), address(this));
+        timelock.grantRole(currentRole, address(this));
 
         timelock.queue(execHash);
         vm.prank(guardian);
         timelock.cancel(execHash);
 
-        ITimelockEngine.QueuedExecution memory entry = timelock.getExecution(
-            execHash
-        );
+        ITimelockEngine.QueuedExecution memory entry = timelock.getExecution(execHash);
         assertTrue(entry.cancelled, "should be cancelled");
     }
 
@@ -322,10 +257,7 @@ contract AresProtocolTest is Test {
     // ─────────────────────────────────────────────────────────────────────────
 
     function test_Reward_ClaimSuccess() public {
-        (bytes32 root, bytes32[] memory aliceProof) = _buildMerkleTree(
-            alice,
-            CLAIM_AMOUNT
-        );
+        (bytes32 root, bytes32[] memory aliceProof) = _buildMerkleTree(alice, CLAIM_AMOUNT);
 
         // Admin activates period
         vm.startPrank(admin);
@@ -338,29 +270,19 @@ contract AresProtocolTest is Test {
         vm.prank(alice);
         rewardDist.claim(1, alice, CLAIM_AMOUNT, aliceProof);
 
-        assertEq(
-            token.balanceOf(alice),
-            balanceBefore + CLAIM_AMOUNT,
-            "alice should receive reward"
-        );
+        assertEq(token.balanceOf(alice), balanceBefore + CLAIM_AMOUNT, "alice should receive reward");
         assertTrue(rewardDist.hasClaimed(1, alice), "should be marked claimed");
     }
 
     function test_Reward_MultiplePeriods() public {
         // Period 1
-        (bytes32 root1, bytes32[] memory proof1) = _buildMerkleTree(
-            alice,
-            CLAIM_AMOUNT
-        );
+        (bytes32 root1, bytes32[] memory proof1) = _buildMerkleTree(alice, CLAIM_AMOUNT);
         vm.startPrank(admin);
         token.approve(address(rewardDist), REWARD_AMOUNT * 2);
         rewardDist.activatePeriod(root1, REWARD_AMOUNT);
 
         // Period 2 with different amount
-        (bytes32 root2, bytes32[] memory proof2) = _buildMerkleTree(
-            alice,
-            CLAIM_AMOUNT * 2
-        );
+        (bytes32 root2, bytes32[] memory proof2) = _buildMerkleTree(alice, CLAIM_AMOUNT * 2);
         rewardDist.activatePeriod(root2, REWARD_AMOUNT);
         vm.stopPrank();
 
@@ -382,52 +304,25 @@ contract AresProtocolTest is Test {
     function test_FullGovernanceLifecycle() public {
         address recipient = alice;
         uint256 amount = 1 ether;
-        bytes memory callData = abi.encodeWithSignature(
-            "transfer(address,uint256)",
-            recipient,
-            amount
-        );
+        bytes memory callData = abi.encodeWithSignature("transfer(address,uint256)", recipient, amount);
         bytes32 salt = keccak256("salt_e2e");
 
         // 1. Commit
-        bytes32 proposalHash = keccak256(
-            abi.encode(
-                IProposalManager.ActionType.TRANSFER,
-                address(token),
-                callData,
-                0,
-                salt
-            )
-        );
+        bytes32 proposalHash =
+            keccak256(abi.encode(IProposalManager.ActionType.TRANSFER, address(token), callData, 0, salt));
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
 
         // 2. Reveal
         vm.roll(block.number + 2);
         vm.prank(proposer);
-        proposalMgr.revealProposal(
-            IProposalManager.ActionType.TRANSFER,
-            address(token),
-            callData,
-            0,
-            salt
-        );
+        proposalMgr.revealProposal(IProposalManager.ActionType.TRANSFER, address(token), callData, 0, salt);
 
         // 3. Authorize (2-of-3)
         uint256 deadline = block.timestamp + 2 hours;
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
 
         // 4. Queue in timelock
         vm.prank(executor);
@@ -442,15 +337,8 @@ contract AresProtocolTest is Test {
         vm.prank(executor);
         treasury.execute(proposalHash);
 
-        assertGt(
-            token.balanceOf(recipient),
-            balBefore,
-            "recipient should have received tokens"
-        );
-        assertEq(
-            uint8(proposalMgr.getProposalState(proposalHash)),
-            uint8(IProposalManager.ProposalState.EXECUTED)
-        );
+        assertGt(token.balanceOf(recipient), balBefore, "recipient should have received tokens");
+        assertEq(uint8(proposalMgr.getProposalState(proposalHash)), uint8(IProposalManager.ProposalState.EXECUTED));
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -464,51 +352,26 @@ contract AresProtocolTest is Test {
     /// @notice Malicious contract attempts to reenter execute() during the
     ///         external call.  The ReentrancyGuard + CEI pattern must block it.
     function test_Attack_Reentrancy_Blocked() public {
-        MaliciousReentrant malicious = new MaliciousReentrant(
-            address(treasury)
-        );
+        MaliciousReentrant malicious = new MaliciousReentrant(address(treasury));
 
         // Set up a proposal that calls into the malicious contract
         bytes memory callData = abi.encodeWithSignature("attack()");
         bytes32 salt = keccak256("reentrancy_salt");
-        bytes32 proposalHash = keccak256(
-            abi.encode(
-                IProposalManager.ActionType.CALL,
-                address(malicious),
-                callData,
-                0,
-                salt
-            )
-        );
+        bytes32 proposalHash =
+            keccak256(abi.encode(IProposalManager.ActionType.CALL, address(malicious), callData, 0, salt));
 
         // Commit & reveal
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
         vm.roll(block.number + 2);
         vm.prank(proposer);
-        proposalMgr.revealProposal(
-            IProposalManager.ActionType.CALL,
-            address(malicious),
-            callData,
-            0,
-            salt
-        );
+        proposalMgr.revealProposal(IProposalManager.ActionType.CALL, address(malicious), callData, 0, salt);
 
         // Authorize
         uint256 deadline = block.timestamp + 2 hours;
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.CALL),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.CALL),
-            deadline,
-            sigs
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.CALL), deadline, signer1Pk, signer2Pk);
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.CALL), deadline, sigs);
 
         // Queue and warp
         vm.prank(executor);
@@ -525,10 +388,7 @@ contract AresProtocolTest is Test {
         treasury.execute(proposalHash);
 
         // Verify reentrant call was blocked
-        assertFalse(
-            malicious.reentrancySucceeded(),
-            "reentrancy must be blocked"
-        );
+        assertFalse(malicious.reentrancySucceeded(), "reentrancy must be blocked");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -537,10 +397,7 @@ contract AresProtocolTest is Test {
 
     /// @notice Claiming rewards twice for the same period must revert.
     function test_Attack_DoubleClaim_Reverts() public {
-        (bytes32 root, bytes32[] memory proof) = _buildMerkleTree(
-            alice,
-            CLAIM_AMOUNT
-        );
+        (bytes32 root, bytes32[] memory proof) = _buildMerkleTree(alice, CLAIM_AMOUNT);
 
         vm.startPrank(admin);
         token.approve(address(rewardDist), REWARD_AMOUNT);
@@ -576,12 +433,7 @@ contract AresProtocolTest is Test {
         );
 
         vm.expectRevert("AuthLayer: invalid signer");
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -592,8 +444,9 @@ contract AresProtocolTest is Test {
     function test_Attack_EarlyExecution_Reverts() public {
         bytes32 execHash = keccak256("early_exec");
 
+        bytes32 currentRole = timelock.TREASURY_ROLE();
         vm.prank(admin);
-        timelock.grantRole(timelock.TREASURY_ROLE(), address(this));
+        timelock.grantRole(currentRole, address(this));
 
         timelock.queue(execHash);
 
@@ -605,47 +458,20 @@ contract AresProtocolTest is Test {
     function test_Attack_EarlyExecution_OnTreasury_Reverts() public {
         // Full proposal setup without warping past delay
         bytes32 salt = keccak256("early_salt");
-        bytes memory callData = abi.encodeWithSignature(
-            "transfer(address,uint256)",
-            alice,
-            1 ether
-        );
-        bytes32 proposalHash = keccak256(
-            abi.encode(
-                IProposalManager.ActionType.TRANSFER,
-                address(token),
-                callData,
-                0,
-                salt
-            )
-        );
+        bytes memory callData = abi.encodeWithSignature("transfer(address,uint256)", alice, 1 ether);
+        bytes32 proposalHash =
+            keccak256(abi.encode(IProposalManager.ActionType.TRANSFER, address(token), callData, 0, salt));
 
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
         vm.roll(block.number + 2);
         vm.prank(proposer);
-        proposalMgr.revealProposal(
-            IProposalManager.ActionType.TRANSFER,
-            address(token),
-            callData,
-            0,
-            salt
-        );
+        proposalMgr.revealProposal(IProposalManager.ActionType.TRANSFER, address(token), callData, 0, salt);
 
         uint256 deadline = block.timestamp + 2 hours;
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
 
         vm.prank(executor);
         treasury.queueExecution(proposalHash);
@@ -662,12 +488,7 @@ contract AresProtocolTest is Test {
 
     /// @notice Trying to re-commit an already-existing proposal hash must revert.
     function test_Attack_ProposalReplay_Reverts() public {
-        (bytes32 proposalHash, ) = _buildProposalHash(
-            IProposalManager.ActionType.TRANSFER,
-            alice,
-            "",
-            0
-        );
+        (bytes32 proposalHash,) = _buildProposalHash(IProposalManager.ActionType.TRANSFER, alice, "", 0);
 
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
@@ -690,28 +511,13 @@ contract AresProtocolTest is Test {
         uint256 deadline = block.timestamp + 2 hours;
 
         // Authorize proposal 1 — consumes nonce 0 for signer1 and signer2
-        bytes[] memory sigs1 = _signProposal(
-            proposalHash1,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
-        authLayer.authorizeProposal(
-            proposalHash1,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs1
-        );
+        bytes[] memory sigs1 =
+            _signProposal(proposalHash1, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
+        authLayer.authorizeProposal(proposalHash1, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs1);
 
         // Reuse those SAME signatures (nonce 0) for proposal 2 — must revert
-        vm.expectRevert("AuthLayer: nonce mismatch");
-        authLayer.authorizeProposal(
-            proposalHash2,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs1
-        );
+        vm.expectRevert("AuthLayer: invalid signer");
+        authLayer.authorizeProposal(proposalHash2, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs1);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -720,7 +526,7 @@ contract AresProtocolTest is Test {
 
     /// @notice Submitting a fabricated Merkle proof must be rejected.
     function test_Attack_InvalidMerkleProof_Reverts() public {
-        (bytes32 root, ) = _buildMerkleTree(alice, CLAIM_AMOUNT);
+        (bytes32 root,) = _buildMerkleTree(alice, CLAIM_AMOUNT);
 
         vm.startPrank(admin);
         token.approve(address(rewardDist), REWARD_AMOUNT);
@@ -780,27 +586,13 @@ contract AresProtocolTest is Test {
     function test_Attack_QueueWithoutAuthorization_Reverts() public {
         bytes32 salt = keccak256("no_auth_salt");
         bytes memory callData = "";
-        bytes32 proposalHash = keccak256(
-            abi.encode(
-                IProposalManager.ActionType.TRANSFER,
-                alice,
-                callData,
-                0,
-                salt
-            )
-        );
+        bytes32 proposalHash = keccak256(abi.encode(IProposalManager.ActionType.TRANSFER, alice, callData, 0, salt));
 
         vm.prank(proposer);
         proposalMgr.commitProposal(proposalHash);
         vm.roll(block.number + 2);
         vm.prank(proposer);
-        proposalMgr.revealProposal(
-            IProposalManager.ActionType.TRANSFER,
-            alice,
-            callData,
-            0,
-            salt
-        );
+        proposalMgr.revealProposal(IProposalManager.ActionType.TRANSFER, alice, callData, 0, salt);
 
         // Try to queue without authorizing — must revert
         vm.prank(executor);
@@ -817,24 +609,14 @@ contract AresProtocolTest is Test {
         bytes32 proposalHash = keccak256("expired_sig");
         uint256 deadline = block.timestamp + 1 hours;
 
-        bytes[] memory sigs = _signProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            signer1Pk,
-            signer2Pk
-        );
+        bytes[] memory sigs =
+            _signProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, signer1Pk, signer2Pk);
 
         // Warp past deadline
         vm.warp(deadline + 1);
 
         vm.expectRevert("AuthLayer: signatures expired");
-        authLayer.authorizeProposal(
-            proposalHash,
-            uint8(IProposalManager.ActionType.TRANSFER),
-            deadline,
-            sigs
-        );
+        authLayer.authorizeProposal(proposalHash, uint8(IProposalManager.ActionType.TRANSFER), deadline, sigs);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -849,32 +631,23 @@ contract AresProtocolTest is Test {
         uint256 value
     ) internal view returns (bytes32 proposalHash, bytes32 salt) {
         salt = keccak256(abi.encode(block.timestamp, block.number, msg.sender));
-        proposalHash = keccak256(
-            abi.encode(actionType, target, callData, value, salt)
-        );
+        proposalHash = keccak256(abi.encode(actionType, target, callData, value, salt));
     }
 
     /// @dev Build a minimal two-leaf Merkle tree for alice and a dummy leaf.
     ///      Returns the root and alice's proof.
     ///      NOTE: uses double-hashing to match RewardDistributor.
-    function _buildMerkleTree(
-        address account,
-        uint256 amount
-    ) internal pure returns (bytes32 root, bytes32[] memory proof) {
+    function _buildMerkleTree(address account, uint256 amount)
+        internal
+        pure
+        returns (bytes32 root, bytes32[] memory proof)
+    {
         // Double-hash leaves (matches contract)
-        bytes32 leafA = keccak256(
-            bytes.concat(keccak256(abi.encodePacked(account, amount)))
-        );
-        bytes32 leafB = keccak256(
-            bytes.concat(
-                keccak256(abi.encodePacked(address(0xDEAD), uint256(1)))
-            )
-        );
+        bytes32 leafA = keccak256(bytes.concat(keccak256(abi.encodePacked(account, amount))));
+        bytes32 leafB = keccak256(bytes.concat(keccak256(abi.encodePacked(address(0xDEAD), uint256(1)))));
 
         // Sort leaves (standard Merkle tree convention)
-        (bytes32 l, bytes32 r) = leafA < leafB
-            ? (leafA, leafB)
-            : (leafB, leafA);
+        (bytes32 l, bytes32 r) = leafA < leafB ? (leafA, leafB) : (leafB, leafA);
         root = keccak256(abi.encodePacked(l, r));
 
         proof = new bytes32[](1);
@@ -883,26 +656,18 @@ contract AresProtocolTest is Test {
 
     /// @dev Sign a TreasuryAction for two signers and return packed signature array.
     ///      Off-chain equivalent: wallets call `eth_signTypedData_v4`.
-    function _signProposal(
-        bytes32 proposalHash,
-        uint8 actionType,
-        uint256 deadline,
-        uint256 pk1,
-        uint256 pk2
-    ) internal view returns (bytes[] memory sigs) {
+    function _signProposal(bytes32 proposalHash, uint8 actionType, uint256 deadline, uint256 pk1, uint256 pk2)
+        internal
+        view
+        returns (bytes[] memory sigs)
+    {
         bytes32 domSep = authLayer.DOMAIN_SEPARATOR();
 
         // Sign with pk1 using their CURRENT nonce
         address addr1 = vm.addr(pk1);
         uint256 nonce1 = authLayer.getNonce(addr1);
         bytes32 digest1 = SignatureLib.toTypedDataHash(
-            domSep,
-            SignatureLib.hashTreasuryAction(
-                proposalHash,
-                actionType,
-                nonce1,
-                deadline
-            )
+            domSep, SignatureLib.hashTreasuryAction(proposalHash, actionType, nonce1, deadline)
         );
         (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(pk1, digest1);
 
@@ -910,13 +675,7 @@ contract AresProtocolTest is Test {
         address addr2 = vm.addr(pk2);
         uint256 nonce2 = authLayer.getNonce(addr2);
         bytes32 digest2 = SignatureLib.toTypedDataHash(
-            domSep,
-            SignatureLib.hashTreasuryAction(
-                proposalHash,
-                actionType,
-                nonce2,
-                deadline
-            )
+            domSep, SignatureLib.hashTreasuryAction(proposalHash, actionType, nonce2, deadline)
         );
         (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(pk2, digest2);
 

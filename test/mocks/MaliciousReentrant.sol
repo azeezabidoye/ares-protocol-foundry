@@ -10,7 +10,7 @@ pragma solidity ^0.8.20;
 contract MaliciousReentrant {
     address public immutable treasury;
     bytes32 public targetProposal;
-    bool    public reentrancySucceeded;
+    bool public reentrancySucceeded;
 
     constructor(address _treasury) {
         treasury = _treasury;
@@ -25,9 +25,7 @@ contract MaliciousReentrant {
     function attack() external {
         if (targetProposal == bytes32(0)) return;
 
-        (bool success,) = treasury.call(
-            abi.encodeWithSignature("execute(bytes32)", targetProposal)
-        );
+        (bool success,) = treasury.call(abi.encodeWithSignature("execute(bytes32)", targetProposal));
 
         // success should always be false — ReentrancyGuard blocks the call
         if (success) {

@@ -87,20 +87,12 @@ contract Deploy is Script {
 
         // ── 5. Core Treasury ──
         treasury = new AresTreasury(
-            admin,
-            guardian,
-            executor,
-            address(proposalMgr),
-            address(authLayer),
-            address(timelockEngine)
+            admin, guardian, executor, address(proposalMgr), address(authLayer), address(timelockEngine)
         );
         console2.log("AresTreasury        :", address(treasury));
 
         // ── 6. Wire roles ──
-        timelockEngine.grantRole(
-            timelockEngine.TREASURY_ROLE(),
-            address(treasury)
-        );
+        timelockEngine.grantRole(timelockEngine.TREASURY_ROLE(), address(treasury));
         proposalMgr.grantRole(proposalMgr.TREASURY_ROLE(), address(treasury));
         proposalMgr.grantRole(proposalMgr.EXECUTOR_ROLE(), executor);
 
